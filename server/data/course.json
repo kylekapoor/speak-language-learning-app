@@ -1,0 +1,88 @@
+{
+  "courses": [
+    {
+      "id": "te_1",
+      "title": "바로 써먹는 여행영어 (필수)",
+      "subtitle": "with Audrey & Lana",
+      "language": "Korean-English",
+      "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/thumbnailImageUrl/te_1_thumbnailImage.jpg",
+      "backgroundImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/headerImageUrl/basics_0_headerImage.png",
+      "lessons": [
+        {
+          "id": "day_0",
+          "title": "로컬 맛집 추천해주실래요?",
+          "subtitle": "Could you recommend a good restaurant with local vibes?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D0_imageUrl.jpg"
+        },
+        {
+          "id": "day_1",
+          "title": "창가 테이블로 가능할까요?",
+          "subtitle": "Is it possible to get a table by the window?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D1_imageUrl.jpg"
+        },
+        {
+          "id": "day_2",
+          "title": "메뉴 좀 주실래요?",
+          "subtitle": "Can we grab the menu, please?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D2_imageUrl.jpg"
+        }
+      ]
+    },
+    {
+      "id": "es_1",
+      "title": "Español para Viajeros",
+      "subtitle": "with Carlos & Maria",
+      "language": "Spanish-English",
+      "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/thumbnailImageUrl/te_1_thumbnailImage.jpg",
+      "backgroundImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/headerImageUrl/basics_0_headerImage.png",
+      "lessons": [
+        {
+          "id": "es_day_0",
+          "title": "¿Dónde está la estación de tren?",
+          "subtitle": "Where is the train station?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D0_imageUrl.jpg"
+        },
+        {
+          "id": "es_day_1",
+          "title": "Una mesa para dos, por favor.",
+          "subtitle": "A table for two, please.",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D1_imageUrl.jpg"
+        },
+        {
+          "id": "es_day_2",
+          "title": "¿Cuánto cuesta esto?",
+          "subtitle": "How much does this cost?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D2_imageUrl.jpg"
+        }
+      ]
+    },
+    {
+      "id": "fr_1",
+      "title": "Français pour les voyageurs",
+      "subtitle": "with Sophie & Luc",
+      "language": "French-English",
+      "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/thumbnailImageUrl/te_1_thumbnailImage.jpg",
+      "backgroundImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/headerImageUrl/basics_0_headerImage.png",
+      "lessons": [
+        {
+          "id": "fr_day_0",
+          "title": "Où sont les toilettes?",
+          "subtitle": "Where are the restrooms?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D0_imageUrl.jpg"
+        },
+        {
+          "id": "fr_day_1",
+          "title": "Je voudrais un café, s'il vous plaît.",
+          "subtitle": "I would like a coffee, please.",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D1_imageUrl.jpg"
+        },
+        {
+          "id": "fr_day_2",
+          "title": "Combien ça coûte?",
+          "subtitle": "How much does it cost?",
+          "thumbnailImageUrl": "https://d34af8cfq8hdgo.cloudfront.net/images/courses/TE1/TE1_D2_imageUrl.jpg"
+        }
+      ]
+    }
+  ]
+}

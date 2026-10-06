@@ -1,0 +1,23 @@
+{
+  "name": "speak-full-stack-take-home",
+  "private": true,
+  "description": "A miniature language learning portal: browse courses, view lessons, and stream speech to a real-time ASR service.",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names server,client --prefix-colors blue,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:mock": "concurrently --kill-others-on-fail --names server,client --prefix-colors blue,magenta \"npm run dev:mock -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
