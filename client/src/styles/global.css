@@ -478,8 +478,8 @@ button {
 .record-control {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  padding-top: 10px;
+  gap: 18px;
+  padding-top: 22px;
 }
 
 .record-button {
@@ -526,7 +526,7 @@ button {
 /* The halo grows with the input level, so it reacts to speech. */
 .record-button-recording::before {
   border-color: color-mix(in srgb, var(--record) 35%, transparent);
-  transform: scale(calc(1 + var(--level) * 0.3));
+  transform: scale(calc(1 + var(--level) * 0.18));
 }
 
 .record-button-connecting,
