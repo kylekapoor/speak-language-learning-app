@@ -26,7 +26,7 @@ export function useAsync<T>(
       },
     );
     return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `load` is re-created each render; `deps` drive it.
+    // `load` is a new closure every render, so `deps` (not `load`) decide when to refetch.
   }, [...deps, attempt]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
