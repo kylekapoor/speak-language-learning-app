@@ -1,5 +1,5 @@
 {
-  "name": "speak-full-stack-take-home",
+  "name": "speak-lite",
   "private": true,
   "description": "A miniature language learning portal: browse courses, view lessons, and stream speech to a real-time ASR service.",
   "workspaces": [

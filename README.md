@@ -1,8 +1,8 @@
-# Speak Lite
+# speak-lite
 
-A small language learning portal. You can browse courses, open a lesson, and tap **Record**
+A small, mobile-first language learning app. You can browse courses, open a lesson, and tap **Record**
 to stream audio over a WebSocket to Speak's speech recognition (ASR) service, watching the
-transcription update live as it streams back.
+transcription update live as it streams back. Not an official Speak product.
 
 ![Course list, course page, recording in progress, and the final transcript](docs/screenshots.png)
 
@@ -21,8 +21,8 @@ npm install
 cp server/.env.example server/.env
 ```
 
-`server/.env.example` already contains the WebSocket host and the interview credentials from
-the brief, so the copy is all the configuration you need.
+`server/.env.example` already contains the WebSocket host and credentials, so the copy is all
+the configuration you need.
 
 ## Running
 
@@ -63,8 +63,7 @@ npm test
 npm run typecheck
 ```
 
-Automated tests weren't required. I added a few where they protect the parts that are easy to
-break: the proxy (end to end against a real socket pair), the REST API, the recording state
+Tests cover the parts that are easiest to break: the proxy (end to end against a real socket pair), the REST API, the recording state
 machine, and the audio helpers.
 
 ## Configuration
@@ -96,16 +95,16 @@ ids, locales, and likely field names such as `matching`, `matchingText` and `exp
 the top level and inside `metadata`). They all got the same reply. Streaming audio after the
 error gets nothing back. The access token doesn't seem to be checked (a wrong one gets the same
 reply), but `X-Client-Info` is required (without it the handshake fails with a 502). My guess is
-the API now expects some matching field that the brief doesn't describe yet.
+the API now expects a matching field that isn't publicly documented.
 
-So that the rest of the experience can still be shown and reviewed, `ASR_MODE=mock` starts a
+So the app still works end to end, `ASR_MODE=mock` starts a
 local WebSocket server (`server/src/asr/mockUpstream.ts`) that follows the documented protocol:
 
 - It refuses handshakes that are missing the two headers, like the real host, so the proxy's
   header injection is still exercised.
 - `asrStart` returns `asrMetadata`, or `asrError` if a session is already active.
 - `asrStream` produces interim `asrResult`s as words are "heard". Timing comes from how much
-  audio has actually arrived, using word timestamps from transcribing the provided clip
+  audio has actually arrived, using word timestamps from transcribing the sample clip
   offline. (It says "This is not what we ordered.")
 - `isFinal: true` produces the final result and ends the session. Stopping early gives a
   shorter final result, just like a real recognizer.
@@ -203,8 +202,7 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
   doesn't depend on render timing or StrictMode double effects.
 - **`sessionReducer`** is a pure state machine
   (`idle → connecting → recording → finishing → done`, with `error` reachable from any active
-  state). Only the most recent transcription is kept, as the brief asks. Each result replaces
-  the last one.
+  state). Only the most recent transcription is kept: each result replaces the last one.
 - **Failure handling.** There are timeouts for `asrMetadata` (8 s) and the final result (5 s;
   if it never comes, the last partial result is kept). Upstream `asrError`s and `proxyError`s
   are mapped to readable messages, and a dropped connection shows "Connection lost". After any
@@ -228,7 +226,7 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
 - **No data-fetching library.** With three read-only endpoints, a small `useAsync` hook
   (abortable, with retry) was enough. With more endpoints or caching needs I'd use TanStack Query.
 
-## With more time
+## Roadmap
 
 - **Real microphone input** via an `AudioWorklet` that downsamples to 16 kHz PCM and produces the
   same chunks as `MockMicrophone`.
@@ -241,4 +239,4 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
   rates).
 - **Testing:** component tests for the recording panel and a Playwright run through the whole
   flow against the mock.
-- Ask Speak what `matchingRequired` expects and support it in the live mode.
+- Support the `matchingRequired` field in live mode once its format is known.
