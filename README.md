@@ -1,4 +1,4 @@
-# speak-lite
+# speak-language-learning-app
 
 A small, mobile-first language learning app. You can browse courses, open a lesson, and tap **Record**
 to stream audio over a WebSocket to Speak's speech recognition (ASR) service, watching the

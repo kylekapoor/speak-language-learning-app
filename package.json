@@ -1,5 +1,5 @@
 {
-  "name": "speak-lite",
+  "name": "speak-language-learning-app",
   "private": true,
   "description": "A miniature language learning portal: browse courses, view lessons, and stream speech to a real-time ASR service.",
   "workspaces": [
