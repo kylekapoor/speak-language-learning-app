@@ -21,8 +21,8 @@ interface TimedWord {
 }
 
 /**
- * What the provided assets/audio.json says, with word end times taken from
- * transcribing it offline (Whisper small.en).
+ * What the sample clip (client/src/assets/mock-audio.json) says, with word end
+ * times taken from transcribing it offline (Whisper small.en).
  */
 const SAMPLE_TRANSCRIPT: TimedWord[] = [
   { word: "this", end: 0.86 },

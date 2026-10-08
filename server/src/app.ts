@@ -23,7 +23,7 @@ export function createApp({ courses, clientDistPath }: AppOptions) {
     const body: ApiErrorResponse = {
       error: { code: "notFound", message: `No route for ${req.method} ${req.originalUrl}` },
     };
-    res.status(404).json(body);
+    res.set("Cache-Control", "no-store").status(404).json(body);
   });
   app.use("/api", api);
 

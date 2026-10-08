@@ -57,6 +57,6 @@ export function parseClientMessage(raw: string): ParseResult {
         : { ok: false, error: "Malformed asrStream message" };
     }
     default:
-      return { ok: false, error: `Unsupported message type: ${String(data.type)}` };
+      return { ok: false, error: `Unsupported message type: ${String(JSON.stringify(data.type)).slice(0, 40)}` };
   }
 }

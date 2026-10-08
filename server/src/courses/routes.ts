@@ -9,7 +9,7 @@ import { toSummary, type CourseRepository } from "./repository.ts";
 
 function notFound(res: Response, message: string) {
   const body: ApiErrorResponse = { error: { code: "notFound", message } };
-  res.status(404).json(body);
+  res.set("Cache-Control", "no-store").status(404).json(body);
 }
 
 export function courseRoutes(repo: CourseRepository): Router {

@@ -64,9 +64,10 @@ npm test
 npm run typecheck
 ```
 
-Tests cover the parts that are easiest to break: the proxy (end to end against a real socket pair,
-including header injection, validation and the origin check), the REST API, the recording state
-machine, and the audio helpers.
+Tests cover the parts that are easiest to break: the proxy end to end against real sockets
+(header injection, validation, frame limits, the origin check), the client's recording controller
+driven headless through the proxy (including upstreams that finalize early or send stale
+results), the REST API, the session state machine, and the audio helpers.
 
 ## Configuration
 
@@ -129,7 +130,7 @@ RecordingPanel
 RecordingController ── WS /ws/asr ──▶ AsrProxy ── WS + X-Access-Token ──▶ wss://api.usespeak-
    ▲     │                           (1 upstream per      X-Client-Info      staging.com/...
    │     └─ MockMicrophone            browser socket)                        (or local mock)
-   │        (assets/audio.json,
+   │        (mock-audio.json,
    │         real-time pacing)
    └──────── asrMetadata / asrResult / asrError / proxyError ◀───────────────────────┘
 ```
@@ -175,13 +176,15 @@ the lesson page needs in one request (including prev/next for navigation).
 Browsers can't set custom headers on a WebSocket handshake, so the server does it:
 
 - **Same-origin only.** Upgrades with an `Origin` from another site get a 403, so a page the
-  user happens to visit can't open the socket and spend our upstream credentials.
+  user happens to visit can't open the socket and spend our upstream credentials. Clients that
+  send no `Origin` (scripts, not browsers) are allowed; real auth is on the roadmap.
 - **One upstream connection per browser connection.** An upgrade on `/ws/asr` dials the upstream
   host with `X-Access-Token` and `X-Client-Info`. Messages are relayed verbatim in both
   directions, so the proxy doesn't need to understand ASR results.
 - **Validation before forwarding.** Browser messages must be JSON `asrStart` or `asrStream`
-  messages of the right shape and under 64 KB. Anything else gets a `proxyError` back and is
-  never forwarded with our credentials.
+  messages of the right shape. Frames over 64 KB are refused by the WebSocket server before
+  they're buffered. Anything else gets a `proxyError` back and is never forwarded with our
+  credentials.
 - **Buffering during the handshake.** Messages that arrive while the upstream is still
   connecting are queued (bounded) and flushed on open, so the client can send `asrStart` right
   away.
@@ -194,11 +197,11 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
 
 ### Recording experience (client)
 
-- **`MockMicrophone`** stands in for real capture. It lazily loads `audio.json` (code-split, so
+- **`MockMicrophone`** stands in for real capture. It lazily loads `mock-audio.json` (code-split, so
   the 160 KB clip isn't in the main bundle), decodes each chunk once to get its duration and
   loudness, and emits chunks at real-time pace (each chunk is about 31 ms of 16 kHz audio),
   scheduled against the start time so timer drift doesn't build up. Stopping early sends the
-  next chunk immediately with `isFinal: true`. Replacing it with a real microphone would only
+  next chunk immediately with `isFinal: true`, even if the clip is still loading. Replacing it with a real microphone would only
   mean producing the same stream of chunks.
 - **`RecordingController`** is plain TypeScript, not React. It owns the socket, the mic and the
   protocol timers: it sends `asrStart`, starts the mic on `asrMetadata`, forwards chunks, and
@@ -209,19 +212,22 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
   state). Only the most recent transcription is kept: each result replaces the last one.
 - **Failure handling.** There are timeouts for `asrMetadata` (8 s) and the final result (5 s;
   if it never comes, the last partial result is kept). Upstream `asrError`s and `proxyError`s
-  are mapped to readable messages, and a dropped connection shows "Connection lost". After any
-  failure the socket is closed, so a stale message from an old session can't leak into the next
-  one. Successful sessions reuse the open connection.
+  are mapped to readable messages, and a dropped connection shows "Connection lost". Results
+  are only accepted after `asrMetadata`, so a leftover from an earlier session is ignored. After
+  any failure, or if the recognizer finalizes before our last chunk goes out (leaving the
+  session open upstream), the socket is closed so the next recording starts clean. Sessions
+  that end normally reuse the open connection.
 - **Feedback.** A live waveform and a halo around the button follow the input level. Interim text
   is shown in grey with a cursor, and the final text in a green "We heard" card. There's an
   elapsed timer, and the button doubles as stop.
 - **Accessibility.** The status and transcript are announced through live regions (the ticking
-  timer is kept out of them), the record button's label tracks its state, text meets WCAG AA
-  contrast, and animations respect `prefers-reduced-motion`.
+  timer is kept out of them), the record button's label tracks its state and it stays focusable
+  while busy (`aria-disabled`), text meets WCAG AA contrast, and animations respect
+  `prefers-reduced-motion`.
 
 ### Decisions and tradeoffs
 
-- **Express + Vite over Next.js.** The core of this exercise is a long-lived WebSocket proxy,
+- **Express + Vite over Next.js.** The heart of the server is a long-lived WebSocket proxy,
   which fits a plain Node server better than Next.js route handlers. Vite gives a fast dev loop,
   and in production Express serves the built client so everything runs on one origin.
 - **Shared types, no shared runtime.** `shared/` holds the protocol and API types, so the client

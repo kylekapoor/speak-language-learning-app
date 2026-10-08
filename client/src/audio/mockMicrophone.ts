@@ -39,7 +39,7 @@ function loadSampleAudio(): Promise<PreparedChunk[]> {
 export const preloadSampleAudio = () => void loadSampleAudio().catch(() => {});
 
 /**
- * Stands in for a real microphone: replays the provided sample recording,
+ * Stands in for a real microphone: replays the bundled sample recording,
  * emitting each chunk once that much "real" time has passed, the way a
  * MediaRecorder/AudioWorklet pipeline would. Swapping in real capture only
  * means producing the same AudioChunk stream.
@@ -53,9 +53,11 @@ export class MockMicrophone {
 
   async start(onChunk: (chunk: AudioChunk) => void): Promise<void> {
     const generation = ++this.generation;
+    clearTimeout(this.timer);
+    this.emitNext = null;
+    this.stopRequested = false;
     const chunks = await loadSampleAudio();
     if (generation !== this.generation) return;
-    this.stopRequested = false;
 
     const startedAt = performance.now();
     let elapsedMs = 0;
@@ -77,13 +79,16 @@ export class MockMicrophone {
       this.timer = setTimeout(() => this.emitNext?.(), Math.max(0, dueAt - performance.now()));
     };
 
-    this.timer = setTimeout(() => this.emitNext?.(), chunks[0].durationMs);
+    // A stop tapped while the audio was still loading ends the recording right away.
+    if (this.stopRequested) this.emitNext();
+    else this.timer = setTimeout(() => this.emitNext?.(), chunks[0].durationMs);
   }
 
   /** Ends the recording: the next chunk goes out immediately, marked final. */
   stop(): void {
-    if (!this.emitNext || this.stopRequested) return;
+    if (this.stopRequested) return;
     this.stopRequested = true;
+    if (!this.emitNext) return; // still loading: start() flushes the final chunk once ready
     clearTimeout(this.timer);
     this.emitNext();
   }

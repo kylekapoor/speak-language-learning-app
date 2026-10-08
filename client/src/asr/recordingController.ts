@@ -23,6 +23,10 @@ export class RecordingController {
   private timer: ReturnType<typeof setTimeout> | undefined;
   /** True from start() until the session finishes or fails. */
   private active = false;
+  /** True once asrMetadata arrives; results before that belong to an earlier session. */
+  private streaming = false;
+  /** True once the final chunk is sent, which is what ends the session upstream. */
+  private finalSent = false;
 
   constructor(lessonId: string, emit: (event: SessionEvent) => void) {
     this.lessonId = lessonId;
@@ -38,6 +42,7 @@ export class RecordingController {
   async start(): Promise<void> {
     if (this.active) return;
     this.active = true;
+    this.finalSent = false;
     this.emit({ type: "start" });
 
     try {
@@ -69,6 +74,8 @@ export class RecordingController {
 
     switch (message.type) {
       case "asrMetadata":
+        if (this.streaming) return;
+        this.streaming = true;
         clearTimeout(this.timer);
         this.emit({ type: "started" });
         this.mic.start((chunk) => this.sendChunk(chunk)).catch(() =>
@@ -76,10 +83,17 @@ export class RecordingController {
         );
         break;
 
-      case "asrResult":
+      case "asrResult": {
+        if (!this.streaming) return;
         this.emit({ type: "result", text: message.text, isFinal: message.isFinal });
-        if (message.isFinal) this.end();
+        if (!message.isFinal) break;
+        const sessionStillOpen = !this.finalSent;
+        this.end();
+        // The recognizer finished before our last chunk went out, so the session is
+        // still open upstream. Drop the socket so the next recording starts clean.
+        if (sessionStillOpen) this.socket.close();
         break;
+      }
 
       case "asrError":
         this.fail(describeAsrError(message.message));
@@ -96,6 +110,7 @@ export class RecordingController {
     this.emit({ type: "audio", level: chunk.level, elapsedMs: chunk.elapsedMs });
     if (!chunk.isFinal) return;
 
+    this.finalSent = true;
     this.emit({ type: "stopping" });
     this.armTimer(FINAL_RESULT_TIMEOUT_MS, () => {
       // No final result: keep the last partial one, and drop the connection
@@ -120,6 +135,7 @@ export class RecordingController {
   }
 
   private fail(error: SessionError): void {
+    if (!this.active) return; // already finished, or disposed
     this.end();
     // Start the next attempt on a fresh connection, so no stale messages
     // from this session can leak into it.
@@ -129,6 +145,7 @@ export class RecordingController {
 
   private end(): void {
     this.active = false;
+    this.streaming = false;
     clearTimeout(this.timer);
     this.mic.abort();
   }

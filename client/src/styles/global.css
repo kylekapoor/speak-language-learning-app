@@ -505,7 +505,7 @@ button {
   height: 30px;
 }
 
-.record-button:active:not(:disabled) {
+.record-button:active:not([aria-disabled="true"]) {
   transform: scale(0.95);
 }
 

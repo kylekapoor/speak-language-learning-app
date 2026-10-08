@@ -9,7 +9,9 @@ export function describeAsrError(code: string): SessionError {
     case "matchingRequired":
       return {
         title: "The speech service didn't accept this recording",
-        detail: `It replied “${code}”. Try again, or run the server with ASR_MODE=mock.`,
+        detail: import.meta.env.DEV
+          ? `It replied “${code}”. Run the server with ASR_MODE=mock to use the local recognizer.`
+          : "Speech recognition isn't available right now. Please try again later.",
       };
     default:
       return { title: "Speech recognition failed", detail: `The service replied “${code}”.` };

@@ -121,6 +121,16 @@ describe("ASR WebSocket proxy", () => {
     expect(forwarded).toEqual([]);
   });
 
+  it("closes connections that send oversized frames", async () => {
+    const upstream = await startMockAsrUpstream({ latencyMs: 0 });
+    cleanups.push(upstream.close);
+    const { socket } = await connect(await startProxy(upstream.url));
+
+    socket.send("x".repeat(65 * 1024));
+    const code = await new Promise((resolve) => socket.once("close", resolve));
+    expect(code).toBe(1009);
+  });
+
   it("refuses upgrades from other sites", async () => {
     const upstream = await startMockAsrUpstream({ latencyMs: 0 });
     cleanups.push(upstream.close);

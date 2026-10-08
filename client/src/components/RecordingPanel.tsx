@@ -21,8 +21,9 @@ export function RecordingPanel({ lessonId }: { lessonId: string }) {
           type="button"
           className={`record-button record-button-${phase}`}
           style={{ "--level": latestLevel } as CSSProperties}
-          onClick={isRecording ? stop : start}
-          disabled={isBusy}
+          // aria-disabled rather than disabled, so keyboard focus stays on the button.
+          onClick={isBusy ? undefined : isRecording ? stop : start}
+          aria-disabled={isBusy}
           aria-label={isRecording ? "Stop recording" : "Record"}
         >
           {isRecording ? <StopIcon /> : <MicIcon />}

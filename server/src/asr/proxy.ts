@@ -7,7 +7,7 @@ import {
   type ProxyErrorCode,
   type ProxyErrorMessage,
 } from "../../../shared/asr.ts";
-import { parseClientMessage } from "./validation.ts";
+import { MAX_CLIENT_MESSAGE_BYTES, parseClientMessage } from "./validation.ts";
 
 export interface AsrProxyOptions {
   upstreamUrl: string;
@@ -30,7 +30,8 @@ const MAX_PENDING_MESSAGES = 512;
  */
 export function attachAsrProxy(server: Server, options: AsrProxyOptions) {
   const log = options.log ?? ((message) => console.log(message));
-  const wss = new WebSocketServer({ noServer: true });
+  // Oversized frames are rejected (1009) before they're buffered, not after.
+  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_CLIENT_MESSAGE_BYTES });
   const alive = new WeakSet<WebSocket>();
 
   const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => {
@@ -150,8 +151,10 @@ function bridge(
     }
   });
 
-  upstream.on("close", (code, reason) => {
-    log(`upstream closed (${code}${reason.length ? `: ${reason}` : ""})`);
+  upstream.on("close", (rawCode, reason) => {
+    log(`upstream closed (${rawCode}${reason.length ? `: ${reason}` : ""})`);
+    // 1005 means "closed without a status", which is still a clean close.
+    const code = rawCode === 1005 ? 1000 : rawCode;
     if (upstreamOpened && code !== 1000 && client.readyState === WebSocket.OPEN) {
       sendProxyError("upstreamClosed", "The speech recognition service closed the connection");
     }
