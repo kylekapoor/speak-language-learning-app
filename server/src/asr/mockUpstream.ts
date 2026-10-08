@@ -24,7 +24,7 @@ interface TimedWord {
  * What the provided assets/audio.json says, with word end times taken from
  * transcribing it offline (Whisper small.en).
  */
-export const SAMPLE_TRANSCRIPT: TimedWord[] = [
+const SAMPLE_TRANSCRIPT: TimedWord[] = [
   { word: "this", end: 0.86 },
   { word: "is", end: 1.02 },
   { word: "not", end: 1.22 },
@@ -36,13 +36,6 @@ export const SAMPLE_TRANSCRIPT: TimedWord[] = [
 const WAV_HEADER_BYTES = 44;
 const BYTES_PER_SECOND = 16_000 * 2; // 16 kHz, 16-bit mono
 
-export interface MockUpstreamOptions {
-  port?: number;
-  /** Simulated recognition latency before each result is sent. */
-  latencyMs?: number;
-  transcript?: TimedWord[];
-}
-
 interface Session {
   id: string;
   audioBytes: number;
@@ -50,13 +43,11 @@ interface Session {
   resultCount: number;
 }
 
-export async function startMockAsrUpstream({
-  port = 0,
-  latencyMs = 150,
-  transcript = SAMPLE_TRANSCRIPT,
-}: MockUpstreamOptions = {}) {
+/** Starts on a free port. `latencyMs` simulates recognition delay before each result. */
+export async function startMockAsrUpstream({ latencyMs = 150 } = {}) {
+  const transcript = SAMPLE_TRANSCRIPT;
   const wss = new WebSocketServer({
-    port,
+    port: 0,
     // Mirror the real host: refuse handshakes without the required headers.
     verifyClient: ({ req }: { req: IncomingMessage }) =>
       Boolean(req.headers["x-access-token"] && req.headers["x-client-info"]),
@@ -121,5 +112,3 @@ function formatFinal(words: string[], complete: boolean): string {
   const sentence = words.join(" ");
   return sentence[0].toUpperCase() + sentence.slice(1) + (complete ? "." : "");
 }
-
-export type MockAsrUpstream = Awaited<ReturnType<typeof startMockAsrUpstream>>;

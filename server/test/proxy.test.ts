@@ -121,6 +121,18 @@ describe("ASR WebSocket proxy", () => {
     expect(forwarded).toEqual([]);
   });
 
+  it("refuses upgrades from other sites", async () => {
+    const upstream = await startMockAsrUpstream({ latencyMs: 0 });
+    cleanups.push(upstream.close);
+    const proxyUrl = await startProxy(upstream.url);
+
+    const socket = new WebSocket(proxyUrl + ASR_WS_PATH, { origin: "https://evil.example" });
+    const status = await new Promise((resolve) =>
+      socket.once("unexpected-response", (_req, res) => resolve(res.statusCode)),
+    );
+    expect(status).toBe(403);
+  });
+
   it("reports an unreachable upstream and closes the client", async () => {
     const { received, socket } = await connect(await startProxy("ws://127.0.0.1:1"));
     const closeCode = await new Promise<number>((resolve) => socket.once("close", resolve));

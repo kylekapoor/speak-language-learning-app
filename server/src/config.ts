@@ -54,7 +54,7 @@ export function loadConfig(): Config {
       // In mock mode the upstream URL is filled in once the mock is listening.
       upstreamUrl: mode === "mock" ? "" : required("ASR_UPSTREAM_URL"),
       accessToken: mode === "mock" ? "mock-token" : required("ASR_ACCESS_TOKEN"),
-      clientInfo: process.env.ASR_CLIENT_INFO ?? "Speak Interview Test",
+      clientInfo: mode === "mock" ? "mock-client" : required("ASR_CLIENT_INFO"),
     },
   };
 }

@@ -39,6 +39,11 @@ export function attachAsrProxy(server: Server, options: AsrProxyOptions) {
       socket.destroy();
       return;
     }
+    if (!isSameOrigin(req)) {
+      // Otherwise any site the user visits could open this socket and spend our upstream credentials.
+      socket.end("HTTP/1.1 403 Forbidden\r\n\r\n");
+      return;
+    }
     wss.handleUpgrade(req, socket, head, (client) => {
       alive.add(client);
       client.on("pong", () => alive.add(client));
@@ -154,6 +159,13 @@ function bridge(
       client.close(toSendableCloseCode(code), "Upstream closed");
     }
   });
+}
+
+/** Browsers always send Origin on WebSocket upgrades; non-browser clients may omit it. */
+function isSameOrigin(req: IncomingMessage): boolean {
+  const { origin, host } = req.headers;
+  if (!origin) return true;
+  return URL.canParse(origin) && new URL(origin).host === host;
 }
 
 /** 1005/1006/1015 are reserved and can't be sent in a close frame. */

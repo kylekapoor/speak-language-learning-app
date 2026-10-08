@@ -54,7 +54,8 @@ npm start
 ```
 
 Then open **http://localhost:3001**. Express serves the built client, the REST API, and the
-WebSocket from one port. (Add `ASR_MODE=mock` in front of `npm start` to use the mock.)
+WebSocket from one port. Hashed assets are served with a one-year immutable cache, and the
+160 KB sample clip is split into its own chunk that only loads on lesson pages. (Add `ASR_MODE=mock` in front of `npm start` to use the mock.)
 
 ### Tests and type checks
 
@@ -63,7 +64,8 @@ npm test
 npm run typecheck
 ```
 
-Tests cover the parts that are easiest to break: the proxy (end to end against a real socket pair), the REST API, the recording state
+Tests cover the parts that are easiest to break: the proxy (end to end against a real socket pair,
+including header injection, validation and the origin check), the REST API, the recording state
 machine, and the audio helpers.
 
 ## Configuration
@@ -77,7 +79,7 @@ the file exists. Real environment variables take precedence.
 | `ASR_MODE`         | `live`                 | `live` proxies to `ASR_UPSTREAM_URL`. `mock` starts a local stand-in. |
 | `ASR_UPSTREAM_URL` | required in `live`     | Upstream ASR WebSocket, `wss://api.usespeak-staging.com/public/v2/ws`. |
 | `ASR_ACCESS_TOKEN` | required in `live`     | Sent as the `X-Access-Token` header on the upstream handshake.  |
-| `ASR_CLIENT_INFO`  | `Speak Interview Test` | Sent as the `X-Client-Info` header.                             |
+| `ASR_CLIENT_INFO`  | required in `live`     | Sent as the `X-Client-Info` header (the host rejects handshakes without it). |
 
 The access token only lives on the server. The browser never sees it.
 
@@ -172,6 +174,8 @@ the lesson page needs in one request (including prev/next for navigation).
 
 Browsers can't set custom headers on a WebSocket handshake, so the server does it:
 
+- **Same-origin only.** Upgrades with an `Origin` from another site get a 403, so a page the
+  user happens to visit can't open the socket and spend our upstream credentials.
 - **One upstream connection per browser connection.** An upgrade on `/ws/asr` dials the upstream
   host with `X-Access-Token` and `X-Client-Info`. Messages are relayed verbatim in both
   directions, so the proxy doesn't need to understand ASR results.
@@ -211,6 +215,9 @@ Browsers can't set custom headers on a WebSocket handshake, so the server does i
 - **Feedback.** A live waveform and a halo around the button follow the input level. Interim text
   is shown in grey with a cursor, and the final text in a green "We heard" card. There's an
   elapsed timer, and the button doubles as stop.
+- **Accessibility.** The status and transcript are announced through live regions (the ticking
+  timer is kept out of them), the record button's label tracks its state, text meets WCAG AA
+  contrast, and animations respect `prefers-reduced-motion`.
 
 ### Decisions and tradeoffs
 

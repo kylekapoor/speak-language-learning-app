@@ -80,10 +80,6 @@ export class MockMicrophone {
     this.timer = setTimeout(() => this.emitNext?.(), chunks[0].durationMs);
   }
 
-  get isRecording(): boolean {
-    return this.emitNext !== null;
-  }
-
   /** Ends the recording: the next chunk goes out immediately, marked final. */
   stop(): void {
     if (!this.emitNext || this.stopRequested) return;

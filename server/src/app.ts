@@ -28,10 +28,13 @@ export function createApp({ courses, clientDistPath }: AppOptions) {
   app.use("/api", api);
 
   if (clientDistPath) {
+    // Vite puts content hashes in these filenames, so they can be cached forever.
+    app.use("/assets", express.static(path.join(clientDistPath, "assets"), { immutable: true, maxAge: "1y" }));
     app.use(express.static(clientDistPath));
-    // Client-side routing: any other GET returns the SPA shell.
+    // Client-side routes get the SPA shell. Paths with an extension are files, so a
+    // missing one should 404 rather than come back as HTML.
     app.use((req, res, next) => {
-      if (req.method !== "GET") return next();
+      if (req.method !== "GET" || path.extname(req.path)) return next();
       res.sendFile(path.join(clientDistPath, "index.html"));
     });
   }

@@ -27,8 +27,10 @@ export function RecordingPanel({ lessonId }: { lessonId: string }) {
         >
           {isRecording ? <StopIcon /> : <MicIcon />}
         </button>
-        <p className="record-caption" aria-live="polite">
-          {caption(state)}
+        <p className="record-caption">
+          {/* Outside the live region, so screen readers don't announce every second. */}
+          {isRecording && <span aria-hidden="true">{formatSeconds(state.elapsedMs)} · </span>}
+          <span aria-live="polite">{caption(phase)}</span>
         </p>
       </div>
       <p className="demo-note">Demo mode: plays a sample recording instead of using your mic.</p>
@@ -91,14 +93,14 @@ function Waveform({ levels, active }: { levels: number[]; active: boolean }) {
   );
 }
 
-function caption({ phase, elapsedMs }: SessionState): string {
+function caption(phase: SessionState["phase"]): string {
   switch (phase) {
     case "idle":
       return "Tap to record";
     case "connecting":
       return "Connecting…";
     case "recording":
-      return `Recording · ${formatSeconds(elapsedMs)} · tap to stop`;
+      return "Recording, tap to stop";
     case "finishing":
       return "Finishing up…";
     case "done":
